@@ -12,6 +12,8 @@
   <img alt="YOLO26" src="https://img.shields.io/badge/Model-YOLO26-green">
   <img alt="ViT" src="https://img.shields.io/badge/Model-Vision%20Transformer-purple">
   <img alt="OpenCV" src="https://img.shields.io/badge/OpenCV-video%20processing-green">
+  <img alt="SBrT 2026" src="https://img.shields.io/badge/SBrT%202026-accepted-brightgreen">
+  <img alt="SBR 2026" src="https://img.shields.io/badge/SBR%202026-in%20preparation-yellow">
 </p>
 
 <p align="center">
@@ -21,6 +23,26 @@
 <p align="center">
   <b>Figure 1.</b> End-to-end pipeline for detecting the start and end keyframes of Picture-in-Picture advertisements in soccer match videos.
 </p>
+
+---
+
+## Table of contents
+
+- [Overview](#overview)
+- [Main contributions](#main-contributions)
+- [Modeling pipeline](#modeling-pipeline)
+- [Important path disclaimer](#important-path-disclaimer)
+- [External video subsets](#external-video-subsets)
+- [Repository structure](#repository-structure)
+- [Research workflow](#research-workflow)
+- [Main findings](#main-findings)
+- [Jupyter Notebook walkthrough](#jupyter-notebook-walkthrough)
+- [Main dependencies](#main-dependencies)
+- [Minimal example: loading a trained YOLO model](#minimal-example-loading-a-trained-yolo-model)
+- [Limitations and future work](#limitations-and-future-work)
+- [Ongoing extension: SBR 2026](#ongoing-extension-sbr-2026)
+- [Citation](#citation)
+- [Project status](#project-status)
 
 ---
 
@@ -44,16 +66,16 @@ The final goal is not only to detect whether a frame contains PiP, but also to e
 
 This repository accompanies a research project on automatic PiP keyframe detection in soccer videos. Its main contributions are:
 
-1. **A dedicated PiP sports dataset**  
+1. **A dedicated PiP sports dataset**
    The project uses 50 two-minute soccer match videos, including videos with and without PiP advertisements, with frame-level annotations.
 
-2. **A comparison between visual paradigms**  
+2. **A comparison between visual paradigms**
    The experiments compare **YOLOv8**, **YOLO26** and **ViT**, covering both object-detection and frame-classification strategies.
 
-3. **A video-oriented inference pipeline**  
+3. **A video-oriented inference pipeline**
    The scripts operate directly on video files and return the detected start and end timecodes in **drop-frame format**, making the output suitable for editing and post-production workflows.
 
-4. **A gradual temporal evaluation metric**  
+4. **A gradual temporal evaluation metric**
    The work uses a **Fibonacci-based gradual accuracy metric**, which penalizes temporal deviations progressively and is more tolerant of very small frame-level differences than a purely exponential penalty.
 
 ---
@@ -214,19 +236,19 @@ processor = AutoImageProcessor.from_pretrained(MODEL_ID)
 model = ViTForImageClassification.from_pretrained(
     MODEL_ID,
     num_labels=2,
-    id2label={0: "without_pip", 1: "with_pip"},
-    label2id={"without_pip": 0, "with_pip": 1}
+    id2label={0: "with_pip", 1: "without_pip"},
+    label2id={"with_pip": 0, "without_pip": 1}
 )
 
 training_args = TrainingArguments(
     output_dir=OUTPUT_DIR,
     num_train_epochs=50,
-    per_device_train_batch_size=16,
-    per_device_eval_batch_size=16,
-    learning_rate=2e-4,
-    evaluation_strategy="steps",
+    per_device_train_batch_size=8,
+    per_device_eval_batch_size=8,
+    learning_rate=1e-4,
+    eval_strategy="steps",
     save_strategy="steps",
-    logging_steps=100,
+    logging_steps=5,
     load_best_model_at_end=True,
     remove_unused_columns=False
 )
@@ -318,7 +340,7 @@ The notebook is written as a practical walkthrough, so it can be used both to re
 ## Main dependencies
 
 ```bash
-pip install ultralytics opencv-python pandas numpy matplotlib openpyxl torch torchvision transformers pillow
+pip install ultralytics opencv-python pandas numpy matplotlib openpyxl torch torchvision transformers pillow evaluate scikit-learn
 ```
 
 Depending on your environment, GPU-enabled PyTorch may require a specific CUDA-compatible installation. Check the official PyTorch installation selector before training larger experiments locally.
@@ -346,8 +368,19 @@ Future work includes:
 
 - expanding the dataset to videos from other broadcasters;
 - performing cross-source validation;
-- investigating the impact of higher frame-sampling rates on YOLO-based models;
+- investigating the impact of higher frame-sampling rates on YOLO-based and ViT-based models;
 - exploring semi-supervised learning to reduce the cost of frame-level annotation.
+
+---
+
+## Ongoing extension: SBR 2026
+
+A follow-up manuscript is currently in preparation for the **Simpósio Brasileiro de Robótica (SBR 2026)**, to be held in João Pessoa, Brazil. It builds on the dissertation behind this repository and extends the SBrT 2026 results in two directions:
+
+- **Model scope.** The comparison is narrowed to **YOLO26** and **ViT**; YOLOv8 is dropped from this follow-up analysis since YOLO26 already supersedes it as the object-detection baseline.
+- **Two-layer evaluation.** In addition to the keyframe-level accuracy already reported above (Fibonacci-based, computed after temporal post-processing), the new manuscript reports a **frame-level raw evaluation layer** — Precision/Recall/F1 computed directly from per-frame detections, before the `min_duration_sec`/`min_gap_sec` temporal filter is applied. This makes explicit how much of the reported accuracy comes from the temporal post-processing step itself.
+
+This section will be updated as the manuscript progresses. No results from the SBR 2026 submission are reproduced here ahead of peer review.
 
 ---
 
@@ -369,4 +402,10 @@ If this repository helps your work, please cite the associated paper:
 
 ## Project status
 
-This repository is part of an academic research project on automatic keyframe detection for sports broadcast editing. The current implementation focuses on soccer videos with PiP advertising overlays. Future extensions may include higher frame-rate sampling, additional detectors, temporal models and broader sports-broadcast datasets.
+This repository is part of an academic research project on automatic keyframe detection for sports broadcast editing. The current implementation focuses on soccer videos with PiP advertising overlays.
+
+- **SBrT 2026** — paper accepted (see [Citation](#citation)).
+- **SBR 2026** — follow-up manuscript in preparation (see [Ongoing extension](#ongoing-extension-sbr-2026)).
+- **Dissertation defense** — planned for November 2026.
+
+Future extensions may include higher frame-rate sampling, additional detectors, temporal models and broader sports-broadcast datasets.
