@@ -375,12 +375,57 @@ Future work includes:
 
 ## Ongoing extension: SBR 2026
 
-A follow-up manuscript is currently in preparation for the **Simpósio Brasileiro de Robótica (SBR 2026)**, to be held in João Pessoa, Brazil. It builds on the dissertation behind this repository and extends the SBrT 2026 results in two directions:
+A follow-up manuscript, *"Picture-in-Picture Advertising Keyframes Detection in Soccer Game Videos"* (current working draft), is in preparation for the **Simpósio Brasileiro de Robótica (SBR 2026)**, João Pessoa-PB, Brazil, 24–27 Nov 2026. The exact submission deadline is still being confirmed against the event's CFP. The numbers below are reproduced directly from the current draft, the same way this repository already tracks the accepted SBrT 2026 results above — they are **not final** and may still change before submission.
 
-- **Model scope.** The comparison is narrowed to **YOLO26** and **ViT**; YOLOv8 is dropped from this follow-up analysis since YOLO26 already supersedes it as the object-detection baseline.
-- **Two-layer evaluation.** In addition to the keyframe-level accuracy already reported above (Fibonacci-based, computed after temporal post-processing), the new manuscript reports a **frame-level raw evaluation layer** — Precision/Recall/F1 computed directly from per-frame detections, before the `min_duration_sec`/`min_gap_sec` temporal filter is applied. This makes explicit how much of the reported accuracy comes from the temporal post-processing step itself.
+**Model scope.** The comparison is narrowed to **YOLO26** and **ViT**; YOLOv8 is dropped from this follow-up since YOLO26 already supersedes it as the object-detection baseline. The dataset is unchanged (50 two-minute videos, 30 with PiP / 20 without, 9,329 annotated frames).
 
-This section will be updated as the manuscript progresses. No results from the SBR 2026 submission are reproduced here ahead of peer review.
+**Two evaluation layers.** The manuscript's main methodological addition is splitting detection accuracy into two layers instead of one:
+
+1. a **raw, frame-level layer** — Precision/Recall/F1 computed directly from every frame's detection, before any temporal filtering;
+2. the **post-processed, keyframe-level layer** already reported above (Fibonacci-based, computed after the `min_duration_sec`/`min_gap_sec` filter groups together or discards short-lived errors).
+
+Reporting both layers side by side makes explicit how much of the headline keyframe accuracy in [Main findings](#main-findings) actually comes from the temporal post-processing step, rather than from the underlying model.
+
+**Temporal post-processing parameters (draft Table II):**
+
+| Parameter | YOLO26 | ViT |
+|---|---:|---:|
+| `threshold_entry` | 0.30 | 0.40 |
+| `threshold_exit` | 0.83 | 0.94 |
+| `min_frames_entry` | 1 | 15 |
+| `min_frames_exit` | 20 | 3 |
+| `start_offset` / `end_offset` | 0 / 0 | 0 / 0 |
+| `smoothing_window` (centered) | 5 | 5 |
+| `min_duration_sec` | 2 | 2 |
+| `min_gap_sec` | 0.3 | 0.3 |
+| segment order | merge-then-filter | merge-then-filter |
+
+> ⚠️ **Open inconsistency in the current draft:** Table II above lists `min_gap_sec = 0.3 s` for both models, but the prose in Section IV-A ("Parameter Tuning") and again at the start of Section IV-C ("Start and End Keyframe Results Analysis") still describes the inter-segment gap as "2 seconds". `min_duration_sec = 2 s` is correctly described in both places, so this reads like leftover text from before `min_gap_sec` was recalibrated to 0.3 s — but it needs checking against the actual detection code before the manuscript is finalized. The table's value (0.3 s) is what's reflected here.
+
+**Frame-level raw results, before temporal post-processing:**
+
+| Model | TP | FP | FN | TN | Prec. (%) | Recall (%) | F1 (%) | mAP@0.5 (%) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| YOLO26 | 811 | 2 | 584 | 34,589 | 99.75 | 58.14 | 73.46 | 99.75 |
+| ViT | 1,358 | 19 | 37 | 34,572 | 98.62 | 97.35 | 97.95 | 98.62 |
+
+Aggregated over the 10 test videos (6 with PiP, 4 without); a frame counts as a false positive when a model flags PiP outside the ground-truth interval, and a false negative when it misses PiP inside it. The two models fail in different ways: ViT's 37 raw FN frames concentrate at the segment boundaries, consistent with the PiP's own gradual graphic transition; YOLO26's 584 raw FN frames are spread through the interior of the PiP segments instead, as short 1–2 frame intermittent gaps recurring roughly every 5 frames — 46 separate gap groups inside `CFOG04T_00-10-16.mp4` alone. This is exactly the kind of short-lived error that `min_duration_sec`/`min_gap_sec` is designed to absorb, which is why Precision only reaches 100% after post-processing.
+
+**Fibonacci-based metric versus tight average-mAP and a SoftED-inspired score (new Section IV-E):**
+
+The draft adds a comparison between the Fibonacci-based accuracy already used in this repository and two temporally-tolerant alternatives from the action-spotting literature, adapted to the same per-video start+end keyframe deviation:
+
+- **tight average-mAP** (Soares & Shah, 2022 — the SoccerNet 2022 action-spotting challenge baseline), which counts a video as a hit only if its combined deviation falls within a frame tolerance τ, averaged over τ = 1–5 frames;
+- a **SoftED-inspired fuzzy-membership score** (Salles et al., 2024), adapted here as a one-sided linear decay reaching zero credit at Δ = 12 frames — the largest deviation actually observed in the test set, and roughly the length of the PiP's own graphic transition.
+
+| Model | Fibonacci F1 (%) | Tight-avg-mAP (%) | SoftED-inspired F1 (%) |
+|---|---:|---:|---:|
+| YOLO26 | 68.1 | 10.00 | 51.55 |
+| ViT | 68.4 | 20.00 | 64.15 |
+
+All three metrics agree ViT outperforms YOLO26, but disagree sharply on the size of that gap — 0.3 points (Fibonacci), 10 points (tight-avg-mAP) or 12.6 points (SoftED-inspired) — because each scores the same underlying per-video deviation differently: tight-avg-mAP applies a hard cutoff at 5 frames, the SoftED-inspired score keeps assigning shrinking credit out to 12 frames, and the Fibonacci score's sub-exponential decay never quite reaches zero. For an automated-editing use case this matters in practice: an editor who would still accept a cut a few frames off, but reject one seconds off, is arguably better served by a metric that degrades gradually than by one that only rewards near-exact hits.
+
+This section will be updated as the manuscript progresses toward submission.
 
 ---
 
