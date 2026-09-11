@@ -89,7 +89,7 @@ This distinction is important because the PiP graphic appears gradually. At the 
 ### YOLOv8 and YOLO26 pipeline
 
 <p align="center">
-  <img src="yv8skframe\_github\_package/assets/pipeline\_yolo\_yolo26.jpg" alt="YOLOv8 and YOLO26 training and detection pipeline" width="900">
+  <img src="Jupyter\_Notebook\_Guide/assets/pipeline\_yolo\_yolo26.jpg" alt="YOLOv8 and YOLO26 training and detection pipeline" width="900">
 </p>
 
 <p align="center">
@@ -99,7 +99,7 @@ This distinction is important because the PiP graphic appears gradually. At the 
 ### ViT pipeline
 
 <p align="center">
-  <img src="yv8skframe\_github\_package/assets/pipeline\_vit.jpg" alt="ViT training and classification pipeline" width="900">
+  <img src="Jupyter\_Notebook\_Guide/assets/pipeline\_vit.jpg" alt="ViT training and classification pipeline" width="900">
 </p>
 
 <p align="center">
@@ -166,13 +166,13 @@ YV8SKFRAME/
 │   ├── YOLO26\_Detect\_results/ # YOLO26 inference spreadsheets generated after detection
 │   └── ViT\_Detect\_results/    # ViT inference spreadsheets generated after detection
 │
-├── yv8skframe\_github\_package/
+├── Jupyter\_Notebook\_Guide/
 │   ├── assets/
 │   │   ├── pipeline\_keyframe\_detection.png # README header pipeline figure
 │   │   ├── pipeline\_yolo\_yolo26.jpg        # YOLOv8/YOLO26 pipeline figure
 │   │   ├── pipeline\_vit.jpg                # ViT pipeline figure
 │   │   └── pipeline.svg                    # General project pipeline figure
-│   └── YV8SKFRAME\_walkthrough.ipynb        # Guided notebook explaining the workflow
+│   └── YV8SKFRAME\_Explanation.ipynb        # Guided notebook explaining the workflow
 │
 ├── .gitattributes
 ├── .gitignore
@@ -318,7 +318,7 @@ In the analyzed test videos, **ViT** was more accurate at detecting the beginnin
 A guided notebook is available in:
 
 ```text
-yv8skframe\_github\_package/YV8SKFRAME\_walkthrough.ipynb
+Jupyter\_Notebook\_Guide/YV8SKFRAME\_Explanation.ipynb
 ```
 
 It explains:
